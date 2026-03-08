@@ -1,9 +1,34 @@
+import { dirname, join } from "path"
+import { fileURLToPath, pathToFileURL } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const dynamic = async () => {
-  // Write your code here
-  // Accept plugin name as CLI argument
-  // Dynamically import plugin from plugins/ directory
-  // Call run() function and print result
-  // Handle missing plugin case
+  const pluginName = process.argv[2];
+
+  if (!pluginName) {
+    console.error("Plugin not found");
+    process.exit(1);
+  }
+
+  const pluginPath = join(__dirname, "plugins", `${pluginName}.js`);
+  const pluginUrl = pathToFileURL(pluginPath).href;
+
+  try {
+    const plugin = await import(pluginUrl);
+
+    const run = plugin.run ?? plugin.default?.run;
+    if (typeof run !== "function") {
+      console.error("Plugin not found");
+      process.exit(1);
+    }
+
+    console.log(run());
+  } catch {
+    console.error("Plugin not found");
+    process.exit(1);
+  }
 };
 
 await dynamic();
